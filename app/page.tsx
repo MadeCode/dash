@@ -3,6 +3,7 @@
 import React from 'react';
 import { useSession, signIn, signOut } from 'next-auth/react';
 import { LogIn, LogOut, LayoutDashboard, Sparkles, CheckCircle2, Calendar, ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
 import TaskList from '@/components/TaskList';
 import HeaderClockWeather from '@/components/HeaderClockWeather';
 import ScheduleList from '@/components/ScheduleList';
@@ -51,6 +52,12 @@ export default function Home() {
             <LogIn className="w-4 h-4 text-stone-400 group-hover:text-stone-200 transition-colors" />
             Sign in with Google
           </button>
+        </div>
+
+        <div className="mt-6 text-[11px] text-stone-400 flex items-center justify-center gap-3 relative z-10">
+          <Link href="/policy" className="hover:text-stone-700 transition-colors">Privacy Policy</Link>
+          <span>•</span>
+          <Link href="/tos" className="hover:text-stone-700 transition-colors">Terms of Service</Link>
         </div>
       </div>
     );

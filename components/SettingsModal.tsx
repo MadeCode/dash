@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { Settings, X, CheckCircle2, ShieldCheck, Cloud, Calendar } from 'lucide-react';
 
+import Link from 'next/link';
+
 export default function SettingsModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [city, setCity] = useState('London');
@@ -80,27 +82,35 @@ export default function SettingsModal() {
                 </p>
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="px-4 py-2 text-xs font-medium text-stone-600 hover:text-stone-800"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-medium bg-stone-900 hover:bg-stone-800 text-stone-50 rounded-xl transition-colors flex items-center gap-1.5 shadow-sm"
-                >
-                  {saved ? (
-                    <>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      Saved!
-                    </>
-                  ) : (
-                    'Save Preferences'
-                  )}
-                </button>
+              <div className="pt-2 flex items-center justify-between border-t border-stone-200/80 mt-4">
+                <div className="text-[10px] text-stone-400 flex gap-2">
+                  <Link href="/policy" onClick={() => setIsOpen(false)} className="hover:text-stone-700 underline">Privacy Policy</Link>
+                  <span>•</span>
+                  <Link href="/tos" onClick={() => setIsOpen(false)} className="hover:text-stone-700 underline">Terms</Link>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsOpen(false)}
+                    className="px-3 py-1.5 text-xs font-medium text-stone-600 hover:text-stone-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-xs font-medium bg-stone-900 hover:bg-stone-800 text-stone-50 rounded-xl transition-colors flex items-center gap-1.5 shadow-sm"
+                  >
+                    {saved ? (
+                      <>
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                        Saved!
+                      </>
+                    ) : (
+                      'Save Preferences'
+                    )}
+                  </button>
+                </div>
               </div>
             </form>
           </div>

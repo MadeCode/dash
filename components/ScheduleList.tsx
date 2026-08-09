@@ -1,29 +1,54 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
+import { useSession } from 'next-auth/react';
 import { ScheduleEvent, EventStatus } from '@/lib/types';
 import { INITIAL_SCHEDULE_EVENTS, getAugmentedSchedule } from '@/lib/googleCalendar';
 
 export default function ScheduleList() {
+  const { data: session } = useSession();
+  const [events, setEvents] = useState<ScheduleEvent[]>(INITIAL_SCHEDULE_EVENTS);
   const [nowMins, setNowMins] = useState<number>(0);
   const activeRef = useRef<HTMLDivElement | null>(null);
 
-  // Update current time minutes every 30 seconds
+  // Poll Google Calendar API when authenticated
+  const fetchCalendar = useCallback(async () => {
+    if (!session) return;
+    try {
+      const res = await fetch('/api/calendar');
+      if (res.ok) {
+        const data = await res.json();
+        if (data.events && data.events.length > 0) {
+          setEvents(data.events);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to poll calendar:', err);
+    }
+  }, [session]);
+
+  useEffect(() => {
+    fetchCalendar();
+    const interval = setInterval(fetchCalendar, 5000); // 5-second fast polling
+    return () => clearInterval(interval);
+  }, [fetchCalendar]);
+
+  // Update system clock minutes every 15 seconds
   useEffect(() => {
     const updateMinutes = () => {
       const d = new Date();
       setNowMins(d.getHours() * 60 + d.getMinutes());
     };
     updateMinutes();
-    const interval = setInterval(updateMinutes, 30000);
+    const interval = setInterval(updateMinutes, 15000);
     return () => clearInterval(interval);
   }, []);
 
   const scheduleEvents = useMemo(() => {
-    return getAugmentedSchedule(INITIAL_SCHEDULE_EVENTS);
-  }, []);
+    return getAugmentedSchedule(events);
+  }, [events]);
 
-  // Auto-scroll active element into center
+  // Auto-scroll active event into center view
   useEffect(() => {
     if (activeRef.current) {
       const timer = setTimeout(() => {
@@ -34,10 +59,11 @@ export default function ScheduleList() {
   }, [nowMins, scheduleEvents]);
 
   const getEventStatus = (event: ScheduleEvent): EventStatus => {
+    if (event.start === 'All day') return 'current';
     const [startH, startM] = event.start.split(':').map(Number);
     const [endH, endM] = event.end.split(':').map(Number);
-    const startMins = startH * 60 + startM;
-    const endMins = endH * 60 + endM;
+    const startMins = startH * 60 + (startM || 0);
+    const endMins = endH * 60 + (endM || 0);
 
     if (nowMins >= endMins) return 'past';
     if (nowMins >= startMins && nowMins < endMins) return 'current';
@@ -46,8 +72,11 @@ export default function ScheduleList() {
 
   return (
     <div className="flex-1 flex flex-col overflow-hidden">
-      <h2 className="text-[10px] md:text-xs font-semibold uppercase tracking-widest text-stone-400 mb-2 md:mb-3 shrink-0">
+      <h2 className="text-[10px] md:text-xs font-semibold uppercase tracking-widest text-stone-400 mb-2 md:mb-3 shrink-0 flex items-center gap-2">
         Today&apos;s Schedule
+        {session && (
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Live Google Calendar Sync Active" />
+        )}
       </h2>
 
       <div className="space-y-3 md:space-y-4 overflow-y-auto pr-3 pb-8 flex-1 thin-scrollbar scroll-smooth">

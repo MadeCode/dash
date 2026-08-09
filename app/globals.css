@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-inter: 'Inter', sans-serif;
+}
+
+body {
+  font-family: var(--font-inter), sans-serif;
+  background-color: #fafaf9; /* stone-50 */
+  color: #292524; /* stone-800 */
+}
+
+/* Smooth animation for disappearing tasks */
+.task-hide {
+  opacity: 0;
+  transform: translateX(12px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Utility classes for scrollbars */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.thin-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  display: block;
+}
+.thin-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #d6d3d1;
+  border-radius: 10px;
+}
+.thin-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: #a8a29e;
+}

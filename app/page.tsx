@@ -1,8 +1,8 @@
 'use client';
 
 import React from 'react';
-import { useSession, signIn, signOut } from 'next-auth/react';
-import { LogIn, LogOut, LayoutDashboard, Sparkles, CheckCircle2, Calendar, ShieldCheck } from 'lucide-react';
+import { useSession, signIn } from 'next-auth/react';
+import { LogIn, LayoutDashboard, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import TaskList from '@/components/TaskList';
 import HeaderClockWeather from '@/components/HeaderClockWeather';
@@ -13,13 +13,35 @@ import SettingsModal from '@/components/SettingsModal';
 export default function Home() {
   const { data: session, status } = useSession();
 
-  // Loading Skeleton
+  // Loading Card State (Shows MiniDash card + spinner instead of full screen blank text)
   if (status === 'loading') {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-stone-50 text-stone-400">
-        <div className="flex items-center gap-3 animate-pulse text-sm font-medium">
-          <LayoutDashboard className="w-5 h-5 text-stone-500" />
-          Loading Mini Desk Dashboard...
+      <div className="flex flex-col items-center justify-center h-screen w-screen bg-stone-50 text-stone-800 p-6 relative overflow-hidden select-none">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-stone-200/50 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-emerald-100/50 rounded-full blur-3xl pointer-events-none" />
+
+        <div className="max-w-sm w-full bg-white/80 backdrop-blur-md border border-stone-200 rounded-3xl p-8 shadow-xl text-center relative z-10">
+          <div className="w-12 h-12 bg-stone-900 text-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-lg shadow-stone-900/10">
+            <LayoutDashboard className="w-6 h-6" />
+          </div>
+
+          <h1 className="text-2xl font-normal tracking-tight text-stone-900 mb-2">
+            MiniDash
+          </h1>
+          <p className="text-xs text-stone-500 mb-8 leading-relaxed">
+            Distraction-free mini dashboard. Syncs live with Google Tasks &amp; Calendar.
+          </p>
+
+          <div className="w-full py-3.5 px-5 bg-stone-100 text-stone-600 font-medium rounded-2xl flex items-center justify-center gap-3 text-sm border border-stone-200">
+            <Loader2 className="w-4 h-4 animate-spin text-stone-500" />
+            <span>Checking authentication...</span>
+          </div>
+        </div>
+
+        <div className="mt-6 text-[11px] text-stone-400 flex items-center justify-center gap-3 relative z-10">
+          <Link href="/policy" className="hover:text-stone-700 transition-colors">Privacy Policy</Link>
+          <span>•</span>
+          <Link href="/tos" className="hover:text-stone-700 transition-colors">Terms of Service</Link>
         </div>
       </div>
     );
@@ -63,27 +85,12 @@ export default function Home() {
     );
   }
 
-  // Authenticated Dashboard View
+  // Authenticated Dashboard View (Clean & Distraction Free)
   return (
     <main className="flex w-full h-full p-6 md:p-8 gap-6 md:gap-8 max-w-5xl mx-auto relative select-none">
       {/* Settings & Fullscreen Controls */}
       <SettingsModal />
       <FullscreenButton />
-
-      {/* User Session Pill */}
-      <div className="absolute top-3 left-4 z-40 flex items-center gap-2">
-        <div className="bg-stone-200/80 backdrop-blur-sm px-2.5 py-1 rounded-full text-[10px] font-medium text-stone-600 flex items-center gap-1.5 border border-stone-300/50">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-          <span className="truncate max-w-[140px]">{session.user?.email}</span>
-          <button
-            onClick={() => signOut()}
-            className="hover:text-stone-900 ml-1 p-0.5 rounded hover:bg-stone-300/50 transition-colors"
-            title="Sign out"
-          >
-            <LogOut className="w-3 h-3 text-stone-400 hover:text-stone-700" />
-          </button>
-        </div>
-      </div>
 
       {/* Left Column: Tasks (55%) */}
       <TaskList />

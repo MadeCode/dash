@@ -10,12 +10,12 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'Mini Desk Dashboard',
-  description: 'Lightweight, distraction-free landscape productivity dashboard for desk displays',
+  title: 'MiniDash',
+  description: 'Distraction-free mini dashboard. Syncs live with Google Tasks & Calendar',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'Mini Dash',
+    title: 'MiniDash',
   },
 };
 

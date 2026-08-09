@@ -3,11 +3,89 @@
 import React, { useEffect, useRef, useState, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { ScheduleEvent, EventStatus } from '@/lib/types';
-import { INITIAL_SCHEDULE_EVENTS, getAugmentedSchedule } from '@/lib/googleCalendar';
+import { INITIAL_SCHEDULE_EVENTS } from '@/lib/googleCalendar';
+
+function timeToMinutes(timeStr: string): number {
+  if (timeStr === 'All day') return 0;
+  const [h, m] = timeStr.split(':').map(Number);
+  return (h || 0) * 60 + (m || 0);
+}
+
+/**
+ * Builds a smart continuous schedule timeline inserting "Nothing planned" gaps
+ * before the first event, between events, and after the last event.
+ */
+function buildSmartTimeline(events: ScheduleEvent[]): ScheduleEvent[] {
+  if (!events || events.length === 0) {
+    const d = new Date();
+    const currentH = String(d.getHours()).padStart(2, '0');
+    const nextH = String((d.getHours() + 1) % 24).padStart(2, '0');
+    return [
+      { id: 'empty-current', start: `${currentH}:00`, end: `${nextH}:00`, title: 'Nothing planned' },
+    ];
+  }
+
+  // Sort events chronologically
+  const sorted = [...events].sort((a, b) => timeToMinutes(a.start) - timeToMinutes(b.start));
+  const timeline: ScheduleEvent[] = [];
+
+  const dayStartMins = 8 * 60; // 08:00 AM start
+  const firstStartMins = timeToMinutes(sorted[0].start);
+
+  // 1. Gap before first event
+  if (firstStartMins > dayStartMins) {
+    const endH = String(Math.floor(firstStartMins / 60)).padStart(2, '0');
+    const endM = String(firstStartMins % 60).padStart(2, '0');
+    timeline.push({
+      id: 'gap-start',
+      start: '08:00',
+      end: `${endH}:${endM}`,
+      title: 'Nothing planned',
+    });
+  }
+
+  // 2. Interleave events and gaps
+  for (let i = 0; i < sorted.length; i++) {
+    const currentEvt = sorted[i];
+    timeline.push(currentEvt);
+
+    if (i < sorted.length - 1) {
+      const nextEvt = sorted[i + 1];
+      const currentEndMins = timeToMinutes(currentEvt.end);
+      const nextStartMins = timeToMinutes(nextEvt.start);
+
+      // Insert gap if there is more than 15 minutes between events
+      if (nextStartMins - currentEndMins >= 15) {
+        timeline.push({
+          id: `gap-${i}`,
+          start: currentEvt.end,
+          end: nextEvt.start,
+          title: 'Nothing planned',
+        });
+      }
+    }
+  }
+
+  // 3. Gap after last event
+  const lastEvt = sorted[sorted.length - 1];
+  const lastEndMins = timeToMinutes(lastEvt.end);
+  const dayEndMins = 21 * 60; // 21:00 PM
+
+  if (lastEndMins < dayEndMins) {
+    timeline.push({
+      id: 'gap-end',
+      start: lastEvt.end,
+      end: '21:00',
+      title: 'Nothing planned',
+    });
+  }
+
+  return timeline;
+}
 
 export default function ScheduleList() {
   const { data: session } = useSession();
-  const [events, setEvents] = useState<ScheduleEvent[]>(INITIAL_SCHEDULE_EVENTS);
+  const [rawEvents, setRawEvents] = useState<ScheduleEvent[]>(INITIAL_SCHEDULE_EVENTS);
   const [nowMins, setNowMins] = useState<number>(0);
   const activeRef = useRef<HTMLDivElement | null>(null);
 
@@ -18,8 +96,8 @@ export default function ScheduleList() {
       const res = await fetch('/api/calendar');
       if (res.ok) {
         const data = await res.json();
-        if (data.events && data.events.length > 0) {
-          setEvents(data.events);
+        if (data.events) {
+          setRawEvents(data.events);
         }
       }
     } catch (err) {
@@ -29,7 +107,7 @@ export default function ScheduleList() {
 
   useEffect(() => {
     fetchCalendar();
-    const interval = setInterval(fetchCalendar, 5000); // 5-second fast polling
+    const interval = setInterval(fetchCalendar, 5000); // 5-second polling
     return () => clearInterval(interval);
   }, [fetchCalendar]);
 
@@ -44,9 +122,9 @@ export default function ScheduleList() {
     return () => clearInterval(interval);
   }, []);
 
-  const scheduleEvents = useMemo(() => {
-    return getAugmentedSchedule(events);
-  }, [events]);
+  const timelineEvents = useMemo(() => {
+    return buildSmartTimeline(rawEvents);
+  }, [rawEvents]);
 
   // Auto-scroll active event into center view
   useEffect(() => {
@@ -56,14 +134,12 @@ export default function ScheduleList() {
       }, 300);
       return () => clearTimeout(timer);
     }
-  }, [nowMins, scheduleEvents]);
+  }, [nowMins, timelineEvents]);
 
   const getEventStatus = (event: ScheduleEvent): EventStatus => {
     if (event.start === 'All day') return 'current';
-    const [startH, startM] = event.start.split(':').map(Number);
-    const [endH, endM] = event.end.split(':').map(Number);
-    const startMins = startH * 60 + (startM || 0);
-    const endMins = endH * 60 + (endM || 0);
+    const startMins = timeToMinutes(event.start);
+    const endMins = timeToMinutes(event.end);
 
     if (nowMins >= endMins) return 'past';
     if (nowMins >= startMins && nowMins < endMins) return 'current';
@@ -80,14 +156,17 @@ export default function ScheduleList() {
       </h2>
 
       <div className="space-y-3 md:space-y-4 overflow-y-auto pr-3 pb-8 flex-1 thin-scrollbar scroll-smooth">
-        {scheduleEvents.map((evt) => {
+        {timelineEvents.map((evt) => {
           const status = getEventStatus(evt);
+          const isGapBlock = evt.title === 'Nothing planned';
 
           if (status === 'past') {
             return (
               <div
                 key={evt.id}
-                className="border-l-2 border-stone-300 pl-2 md:pl-3 opacity-60 transition-all"
+                className={`border-l-2 border-stone-300 pl-2 md:pl-3 opacity-50 transition-all ${
+                  isGapBlock ? 'italic text-stone-400' : ''
+                }`}
               >
                 <div className="text-[10px] md:text-xs font-medium text-stone-400 mb-0.5 line-through">
                   {evt.start} - {evt.end}
@@ -104,7 +183,9 @@ export default function ScheduleList() {
               <div
                 key={evt.id}
                 ref={activeRef}
-                className="border-l-2 border-emerald-400 pl-2 md:pl-3 relative py-1 transition-all"
+                className={`border-l-2 border-emerald-400 pl-2 md:pl-3 relative py-1 transition-all ${
+                  isGapBlock ? 'bg-stone-100/40 rounded-r-xl' : ''
+                }`}
               >
                 <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] animate-pulse-glow" />
                 <div className="text-[10px] md:text-xs font-bold text-emerald-600 mb-0.5">
@@ -120,12 +201,14 @@ export default function ScheduleList() {
           return (
             <div
               key={evt.id}
-              className="border-l-2 border-stone-300 pl-2 md:pl-3 transition-all"
+              className={`border-l-2 border-stone-300 pl-2 md:pl-3 transition-all ${
+                isGapBlock ? 'text-stone-400 italic' : ''
+              }`}
             >
-              <div className="text-[10px] md:text-xs font-medium text-stone-500 mb-0.5">
+              <div className="text-[10px] md:text-xs font-medium text-stone-400 mb-0.5">
                 {evt.start} - {evt.end}
               </div>
-              <div className="text-xs md:text-sm font-medium text-stone-800">
+              <div className="text-xs md:text-sm font-medium text-stone-700">
                 {evt.title}
               </div>
             </div>

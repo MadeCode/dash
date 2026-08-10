@@ -42,3 +42,16 @@ body {
 .thin-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: #a8a29e;
 }
+
+@keyframes meeting-alert-pulse {
+  0%, 16%, 32%, 48%, 100% {
+    background-color: transparent;
+  }
+  8%, 24%, 40% {
+    background-color: rgba(251, 146, 60, 0.18); /* orange-400 */
+  }
+}
+
+.animate-meeting-alert-pulse {
+  animation: meeting-alert-pulse 3.6s ease-in-out 1;
+}

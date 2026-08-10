@@ -10,8 +10,26 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: 'MiniDash',
-  description: 'Distraction-free mini dashboard. Syncs live with Google Tasks & Calendar',
+  title: {
+    default: 'MiniDash',
+    template: '%s | MiniDash',
+  },
+  applicationName: 'MiniDash',
+  description:
+    "MiniDash is a distraction-free personal dashboard that helps you view today's Google Calendar schedule and manage your MiniDash Google Tasks list in one focused workspace.",
+  openGraph: {
+    title: 'MiniDash',
+    siteName: 'MiniDash',
+    description:
+      "MiniDash is a distraction-free personal dashboard for today's Google Calendar schedule and your MiniDash Google Tasks list.",
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'MiniDash',
+    description:
+      "MiniDash is a distraction-free personal dashboard for today's Google Calendar schedule and your MiniDash Google Tasks list.",
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',

@@ -5,6 +5,12 @@ import { useSession } from 'next-auth/react';
 import { ScheduleEvent, EventStatus } from '@/lib/types';
 import { INITIAL_SCHEDULE_EVENTS } from '@/lib/googleCalendar';
 
+const BRUSSELS_TIME_ZONE = 'Europe/Brussels';
+
+function getBrusselsDate(): Date {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: BRUSSELS_TIME_ZONE }));
+}
+
 function timeToMinutes(timeStr: string): number {
   if (timeStr === 'All day') return 0;
   const [h, m] = timeStr.split(':').map(Number);
@@ -17,7 +23,7 @@ function timeToMinutes(timeStr: string): number {
  */
 function buildSmartTimeline(events: ScheduleEvent[]): ScheduleEvent[] {
   if (!events || events.length === 0) {
-    const d = new Date();
+    const d = getBrusselsDate();
     const currentH = String(d.getHours()).padStart(2, '0');
     const nextH = String((d.getHours() + 1) % 24).padStart(2, '0');
     return [
@@ -114,7 +120,7 @@ export default function ScheduleList() {
   // Update system clock minutes every 15 seconds
   useEffect(() => {
     const updateMinutes = () => {
-      const d = new Date();
+      const d = getBrusselsDate();
       setNowMins(d.getHours() * 60 + d.getMinutes());
     };
     updateMinutes();

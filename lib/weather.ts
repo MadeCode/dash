@@ -25,14 +25,16 @@ export function mapWmoCodeToCondition(code: number): WeatherData['condition'] {
   return 'partly-cloudy';
 }
 
-// Default location: Brussels, Belgium (lat: 50.8503, lon: 4.3517)
+const BRUSSELS_TIME_ZONE = 'Europe/Brussels';
+
+// Default location: Ghent, Belgium (lat: 51.0543, lon: 3.7174)
 export async function fetchLiveWeather(
-  lat: number = 50.8503,
-  lon: number = 4.3517,
-  cityName: string = 'Brussels'
+  lat: number = 51.0543,
+  lon: number = 3.7174,
+  cityName: string = 'Ghent'
 ): Promise<WeatherData> {
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&forecast_days=1`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&forecast_days=1&timezone=${encodeURIComponent(BRUSSELS_TIME_ZONE)}`;
     const res = await fetch(url, { next: { revalidate: 900 } });
 
     if (!res.ok) throw new Error(`Weather fetch failed: ${res.status}`);
@@ -47,12 +49,17 @@ export async function fetchLiveWeather(
     const rainProbs: number[] = data.hourly?.precipitation_probability || [];
     const timeStrings: string[] = data.hourly?.time || [];
 
-    const currentHour = new Date().getHours();
+    const currentHour = Number(
+      new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        hour12: false,
+        timeZone: BRUSSELS_TIME_ZONE,
+      }).format(new Date())
+    );
     const rainChance = rainProbs[currentHour] ?? rainProbs[0] ?? 0;
 
     const hourly: HourlyForecast[] = timeStrings.map((t, idx) => {
-      const dateObj = new Date(t);
-      const hourStr = `${String(dateObj.getHours()).padStart(2, '0')}:00`;
+      const hourStr = `${String(Number(t.slice(11, 13))).padStart(2, '0')}:00`;
       return {
         time: hourStr,
         temp: Math.round(hourlyTemps[idx] ?? currentTemp),
@@ -70,9 +77,9 @@ export async function fetchLiveWeather(
       hourly,
     };
   } catch (error) {
-    console.warn('Falling back to default Brussels weather data:', error);
+    console.warn('Falling back to default Ghent weather data:', error);
     
-    // Fallback hourly forecast for Brussels
+    // Fallback hourly forecast for Ghent
     const mockHourly: HourlyForecast[] = Array.from({ length: 24 }, (_, i) => ({
       time: `${String(i).padStart(2, '0')}:00`,
       temp: 18 + Math.round(Math.sin(i / 3) * 4),
@@ -84,7 +91,7 @@ export async function fetchLiveWeather(
       temp: 20,
       condition: 'partly-cloudy',
       rainChance: 10,
-      city: 'Brussels',
+      city: cityName,
       isLive: false,
       hourly: mockHourly,
     };

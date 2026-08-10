@@ -29,7 +29,7 @@ export default function Home() {
             MiniDash
           </h1>
           <p className="text-xs text-stone-500 mb-8 leading-relaxed">
-            Distraction-free mini dashboard. Syncs live with Google Tasks &amp; Calendar.
+            MiniDash is a distraction-free dashboard for your focus tasks and today's Google Calendar schedule.
           </p>
 
           <div className="w-full py-3.5 px-5 bg-stone-100 text-stone-600 font-medium rounded-2xl flex items-center justify-center gap-3 text-sm border border-stone-200">
@@ -39,6 +39,8 @@ export default function Home() {
         </div>
 
         <div className="mt-6 text-[11px] text-stone-400 flex items-center justify-center gap-3 relative z-10">
+          <Link href="/oauth-info" className="hover:text-stone-700 transition-colors">About MiniDash</Link>
+          <span>•</span>
           <Link href="/policy" className="hover:text-stone-700 transition-colors">Privacy Policy</Link>
           <span>•</span>
           <Link href="/tos" className="hover:text-stone-700 transition-colors">Terms of Service</Link>
@@ -64,7 +66,7 @@ export default function Home() {
             MiniDash
           </h1>
           <p className="text-xs text-stone-500 mb-8 leading-relaxed">
-            Distraction-free mini dashboard. Syncs live with Google Tasks &amp; Calendar.
+            MiniDash is a distraction-free dashboard for your focus tasks and today's Google Calendar schedule.
           </p>
 
           <button
@@ -77,6 +79,8 @@ export default function Home() {
         </div>
 
         <div className="mt-6 text-[11px] text-stone-400 flex items-center justify-center gap-3 relative z-10">
+          <Link href="/oauth-info" className="hover:text-stone-700 transition-colors">About MiniDash</Link>
+          <span>•</span>
           <Link href="/policy" className="hover:text-stone-700 transition-colors">Privacy Policy</Link>
           <span>•</span>
           <Link href="/tos" className="hover:text-stone-700 transition-colors">Terms of Service</Link>

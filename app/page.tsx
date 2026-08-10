@@ -28,8 +28,12 @@ export default function Home() {
           <h1 className="text-2xl font-normal tracking-tight text-stone-900 mb-2">
             MiniDash
           </h1>
-          <p className="text-xs text-stone-500 mb-8 leading-relaxed">
+          <p className="text-xs text-stone-500 mb-3 leading-relaxed">
             MiniDash is a distraction-free dashboard for your focus tasks and today's Google Calendar schedule.
+          </p>
+          <p className="text-xs text-stone-500 mb-8 leading-relaxed">
+            After you sign in with Google, MiniDash shows your daily calendar events, local time,
+            weather, and a dedicated MiniDash task list in one focused workspace.
           </p>
 
           <div className="w-full py-3.5 px-5 bg-stone-100 text-stone-600 font-medium rounded-2xl flex items-center justify-center gap-3 text-sm border border-stone-200">
@@ -65,8 +69,12 @@ export default function Home() {
           <h1 className="text-2xl font-normal tracking-tight text-stone-900 mb-2">
             MiniDash
           </h1>
-          <p className="text-xs text-stone-500 mb-8 leading-relaxed">
+          <p className="text-xs text-stone-500 mb-3 leading-relaxed">
             MiniDash is a distraction-free dashboard for your focus tasks and today's Google Calendar schedule.
+          </p>
+          <p className="text-xs text-stone-500 mb-8 leading-relaxed">
+            Sign in to connect your Google account so MiniDash can display today's schedule and help
+            you manage your MiniDash task list from a simple, always-ready home screen.
           </p>
 
           <button

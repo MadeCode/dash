@@ -7,14 +7,31 @@ import { fetchLiveWeather, WeatherData, HourlyForecast } from '@/lib/weather';
 const BRUSSELS_TIME_ZONE = 'Europe/Brussels';
 const GHENT_COORDINATES = { lat: 51.0543, lon: 3.7174, city: 'Ghent' };
 
-function getBrusselsHour(): number {
-  const hour = new Intl.DateTimeFormat('en-US', {
-    hour: '2-digit',
-    hour12: false,
+function getBrusselsTimeParts(date: Date): { hours: string; minutes: string } {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    hour: 'numeric',
+    minute: 'numeric',
+    hourCycle: 'h23',
     timeZone: BRUSSELS_TIME_ZONE,
-  }).format(new Date());
+  }).formatToParts(date);
 
-  return Number(hour);
+  const hours = parts.find((part) => part.type === 'hour')?.value ?? '0';
+  const minutes = parts.find((part) => part.type === 'minute')?.value ?? '0';
+
+  return {
+    hours: hours.padStart(2, '0'),
+    minutes: minutes.padStart(2, '0'),
+  };
+}
+
+function formatBrusselsTime(date: Date): string {
+  const { hours, minutes } = getBrusselsTimeParts(date);
+
+  return `${hours}:${minutes}`;
+}
+
+function getBrusselsHour(): number {
+  return Number(getBrusselsTimeParts(new Date()).hours);
 }
 
 export default function HeaderClockWeather() {
@@ -35,16 +52,7 @@ export default function HeaderClockWeather() {
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
-      const hours = new Intl.DateTimeFormat('en-US', {
-        hour: '2-digit',
-        hour12: false,
-        timeZone: BRUSSELS_TIME_ZONE,
-      }).format(now);
-      const minutes = new Intl.DateTimeFormat('en-US', {
-        minute: '2-digit',
-        timeZone: BRUSSELS_TIME_ZONE,
-      }).format(now);
-      setTimeStr(`${hours}:${minutes}`);
+      setTimeStr(formatBrusselsTime(now));
 
       const options: Intl.DateTimeFormatOptions = {
         weekday: 'long',

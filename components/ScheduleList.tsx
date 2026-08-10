@@ -6,6 +6,8 @@ import { ScheduleEvent, EventStatus } from '@/lib/types';
 import { INITIAL_SCHEDULE_EVENTS } from '@/lib/googleCalendar';
 
 const BRUSSELS_TIME_ZONE = 'Europe/Brussels';
+const UPCOMING_MEETING_ALERT_MINUTES = new Set([10, 5, 2]);
+const MEETING_ALERT_PULSE_DURATION_MS = 3600;
 
 function getBrusselsDate(): Date {
   return new Date(new Date().toLocaleString('en-US', { timeZone: BRUSSELS_TIME_ZONE }));
@@ -15,6 +17,19 @@ function timeToMinutes(timeStr: string): number {
   if (timeStr === 'All day') return 0;
   const [h, m] = timeStr.split(':').map(Number);
   return (h || 0) * 60 + (m || 0);
+}
+
+function formatScheduleTime(timeStr: string): string {
+  if (timeStr === 'All day') return timeStr;
+
+  const [hours, minutes = '0'] = timeStr.split(':');
+  return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
+}
+
+function formatScheduleRange(event: ScheduleEvent): string {
+  if (event.start === 'All day' || event.end === 'All day') return 'All day';
+
+  return `${formatScheduleTime(event.start)} - ${formatScheduleTime(event.end)}`;
 }
 
 /**
@@ -94,6 +109,8 @@ export default function ScheduleList() {
   const [rawEvents, setRawEvents] = useState<ScheduleEvent[]>(INITIAL_SCHEDULE_EVENTS);
   const [nowMins, setNowMins] = useState<number>(0);
   const activeRef = useRef<HTMLDivElement | null>(null);
+  const alertedMeetingKeysRef = useRef<Set<string>>(new Set());
+  const [isMeetingAlertPulsing, setIsMeetingAlertPulsing] = useState(false);
 
   // Poll Google Calendar API when authenticated
   const fetchCalendar = useCallback(async () => {
@@ -142,6 +159,32 @@ export default function ScheduleList() {
     }
   }, [nowMins, timelineEvents]);
 
+  useEffect(() => {
+    const upcomingMeeting = rawEvents.find((event) => {
+      if (event.title === 'Nothing planned' || event.start === 'All day') return false;
+
+      return UPCOMING_MEETING_ALERT_MINUTES.has(timeToMinutes(event.start) - nowMins);
+    });
+
+    if (!upcomingMeeting) return;
+
+    const minutesUntilMeeting = timeToMinutes(upcomingMeeting.start) - nowMins;
+    const alertKey = `${upcomingMeeting.id}-${formatScheduleTime(upcomingMeeting.start)}-${minutesUntilMeeting}`;
+
+    if (alertedMeetingKeysRef.current.has(alertKey)) return;
+
+    alertedMeetingKeysRef.current.add(alertKey);
+    setIsMeetingAlertPulsing(false);
+
+    const startTimer = setTimeout(() => setIsMeetingAlertPulsing(true), 0);
+    const stopTimer = setTimeout(() => setIsMeetingAlertPulsing(false), MEETING_ALERT_PULSE_DURATION_MS);
+
+    return () => {
+      clearTimeout(startTimer);
+      clearTimeout(stopTimer);
+    };
+  }, [nowMins, rawEvents]);
+
   const getEventStatus = (event: ScheduleEvent): EventStatus => {
     if (event.start === 'All day') return 'current';
     const startMins = timeToMinutes(event.start);
@@ -153,7 +196,11 @@ export default function ScheduleList() {
   };
 
   return (
-    <div className="flex-1 flex flex-col overflow-hidden">
+    <div
+      className={`flex-1 flex flex-col overflow-hidden rounded-3xl transition-colors ${
+        isMeetingAlertPulsing ? 'animate-meeting-alert-pulse' : ''
+      }`}
+    >
       <h2 className="text-[10px] md:text-xs font-semibold uppercase tracking-widest text-stone-400 mb-2 md:mb-3 shrink-0 flex items-center gap-2">
         Today&apos;s Schedule
         {session && (
@@ -175,7 +222,7 @@ export default function ScheduleList() {
                 }`}
               >
                 <div className="text-[10px] md:text-xs font-medium text-stone-400 mb-0.5 line-through">
-                  {evt.start} - {evt.end}
+                  {formatScheduleRange(evt)}
                 </div>
                 <div className="text-xs md:text-sm font-medium text-stone-400 line-through">
                   {evt.title}
@@ -195,7 +242,7 @@ export default function ScheduleList() {
               >
                 <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] animate-pulse-glow" />
                 <div className="text-[10px] md:text-xs font-bold text-emerald-600 mb-0.5">
-                  {evt.start} - {evt.end}
+                  {formatScheduleRange(evt)}
                 </div>
                 <div className="text-xs md:text-sm font-semibold text-stone-900">
                   Current: {evt.title}
@@ -212,7 +259,7 @@ export default function ScheduleList() {
               }`}
             >
               <div className="text-[10px] md:text-xs font-medium text-stone-400 mb-0.5">
-                {evt.start} - {evt.end}
+                {formatScheduleRange(evt)}
               </div>
               <div className="text-xs md:text-sm font-medium text-stone-700">
                 {evt.title}

@@ -1,8 +1,21 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { CloudSun, Sun, Cloud, CloudRain, CloudLightning, Snowflake, Umbrella, X, Clock } from 'lucide-react';
 import { fetchLiveWeather, WeatherData, HourlyForecast } from '@/lib/weather';
+
+const BRUSSELS_TIME_ZONE = 'Europe/Brussels';
+const GHENT_COORDINATES = { lat: 51.0543, lon: 3.7174, city: 'Ghent' };
+
+function getBrusselsHour(): number {
+  const hour = new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit',
+    hour12: false,
+    timeZone: BRUSSELS_TIME_ZONE,
+  }).format(new Date());
+
+  return Number(hour);
+}
 
 export default function HeaderClockWeather() {
   const [timeStr, setTimeStr] = useState<string>('--:--');
@@ -11,18 +24,26 @@ export default function HeaderClockWeather() {
     temp: 20,
     condition: 'partly-cloudy',
     rainChance: 0,
-    city: 'Brussels',
+    city: GHENT_COORDINATES.city,
     isLive: false,
     hourly: [],
   });
   const [showHourlyModal, setShowHourlyModal] = useState(false);
+  const currentHourRef = useRef<HTMLDivElement | null>(null);
 
   // 1. Clock Update Loop
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
-      const hours = String(now.getHours()).padStart(2, '0');
-      const minutes = String(now.getMinutes()).padStart(2, '0');
+      const hours = new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        hour12: false,
+        timeZone: BRUSSELS_TIME_ZONE,
+      }).format(now);
+      const minutes = new Intl.DateTimeFormat('en-US', {
+        minute: '2-digit',
+        timeZone: BRUSSELS_TIME_ZONE,
+      }).format(now);
       setTimeStr(`${hours}:${minutes}`);
 
       const options: Intl.DateTimeFormatOptions = {
@@ -30,7 +51,7 @@ export default function HeaderClockWeather() {
         month: 'short',
         day: 'numeric',
       };
-      setDateStr(now.toLocaleDateString('en-US', options));
+      setDateStr(now.toLocaleDateString('en-US', { ...options, timeZone: BRUSSELS_TIME_ZONE }));
     };
 
     updateClock();
@@ -38,11 +59,11 @@ export default function HeaderClockWeather() {
     return () => clearInterval(interval);
   }, []);
 
-  // 2. Weather Polling Loop (every 15 mins) for Brussels
+  // 2. Weather Polling Loop (every 15 mins) for Ghent
   useEffect(() => {
     let isMounted = true;
     const loadWeather = async () => {
-      const data = await fetchLiveWeather(50.8503, 4.3517, 'Brussels');
+      const data = await fetchLiveWeather(GHENT_COORDINATES.lat, GHENT_COORDINATES.lon, GHENT_COORDINATES.city);
       if (isMounted) setWeather(data);
     };
 
@@ -53,6 +74,16 @@ export default function HeaderClockWeather() {
       clearInterval(weatherInterval);
     };
   }, []);
+
+  useEffect(() => {
+    if (!showHourlyModal || !currentHourRef.current) return;
+
+    const timer = setTimeout(() => {
+      currentHourRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [showHourlyModal, weather.hourly]);
 
   const renderWeatherIcon = (condition: WeatherData['condition'], className = "w-5 h-5 md:w-6 md:h-6 text-stone-600") => {
     switch (condition) {
@@ -86,11 +117,11 @@ export default function HeaderClockWeather() {
           </div>
         </div>
 
-        {/* Clickable Weather Info for Brussels */}
+        {/* Clickable Weather Info for Ghent */}
         <div
           onClick={() => setShowHourlyModal(true)}
           className="text-right flex flex-col items-end cursor-pointer group p-2 -mr-2 rounded-2xl hover:bg-stone-200/50 transition-all select-none"
-          title="Click to view full hourly forecast for Brussels"
+          title="Click to view full hourly forecast for Ghent"
         >
           <div className="flex items-center gap-2 md:gap-3 mb-0.5">
             <span className="text-xl md:text-2xl font-light text-stone-800">
@@ -103,7 +134,7 @@ export default function HeaderClockWeather() {
             {weather.rainChance}% rain
           </div>
           <div className="text-[9px] text-stone-400 group-hover:text-stone-700 transition-colors mt-0.5">
-            Brussels • Hourly forecast
+            {weather.city} • Hourly forecast
           </div>
         </div>
       </div>
@@ -125,7 +156,7 @@ export default function HeaderClockWeather() {
               </div>
               <div>
                 <h3 className="text-base font-semibold text-stone-900">
-                  Brussels Hourly Forecast
+                  {weather.city} Hourly Forecast
                 </h3>
                 <p className="text-xs text-stone-500">
                   Current: {weather.temp}°C • {weather.condition.replace('-', ' ')}
@@ -138,16 +169,22 @@ export default function HeaderClockWeather() {
                 <div className="text-stone-400 text-xs py-8 text-center">Loading forecast data...</div>
               ) : (
                 weather.hourly.map((item: HourlyForecast, idx: number) => {
-                  const currentHourStr = `${String(new Date().getHours()).padStart(2, '0')}:00`;
+                  const currentHour = getBrusselsHour();
+                  const itemHour = Number(item.time.split(':')[0]);
+                  const currentHourStr = `${String(currentHour).padStart(2, '0')}:00`;
                   const isCurrentHour = item.time === currentHourStr;
+                  const isPastHour = itemHour < currentHour;
 
                   return (
                     <div
                       key={idx}
+                      ref={isCurrentHour ? currentHourRef : undefined}
                       className={`flex items-center justify-between p-3 rounded-2xl border transition-all ${
                         isCurrentHour
                           ? 'bg-emerald-50/60 border-emerald-200 text-stone-900 font-semibold'
-                          : 'bg-white/70 border-stone-200/70 text-stone-700 hover:bg-stone-100/60'
+                          : isPastHour
+                            ? 'bg-white/40 border-stone-200/50 text-stone-400 opacity-60'
+                            : 'bg-white/70 border-stone-200/70 text-stone-700 hover:bg-stone-100/60'
                       }`}
                     >
                       <div className="flex items-center gap-3 w-24">

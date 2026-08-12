@@ -26,6 +26,28 @@ function formatScheduleTime(timeStr: string): string {
   return `${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`;
 }
 
+function getOptionalClassNames(event: ScheduleEvent, status: EventStatus) {
+  if (!event.isOptional) return { border: '', time: '', title: '', background: '', badge: null as React.ReactNode };
+
+  if (status === 'current') {
+    return {
+      border: 'border-sky-400',
+      time: 'text-sky-600',
+      title: 'text-sky-950',
+      background: 'bg-sky-50/70 rounded-r-xl',
+      badge: <span className="ml-2 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-sky-700">Optional</span>,
+    };
+  }
+
+  return {
+    border: 'border-sky-300',
+    time: 'text-sky-500',
+    title: 'text-sky-700',
+    background: 'bg-sky-50/40 rounded-r-xl',
+    badge: <span className="ml-2 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-sky-700">Optional</span>,
+  };
+}
+
 function formatScheduleRange(event: ScheduleEvent): string {
   if (event.start === 'All day' || event.end === 'All day') return 'All day';
 
@@ -201,7 +223,7 @@ export default function ScheduleList() {
         isMeetingAlertPulsing ? 'animate-meeting-alert-pulse' : ''
       }`}
     >
-      <h2 className="text-[10px] md:text-xs font-semibold uppercase tracking-widest text-stone-400 mb-2 md:mb-3 shrink-0 flex items-center gap-2">
+      <h2 className="text-[10px] md:text-xs font-semibold uppercase tracking-widest text-stone-400 mb-2 md:mb-3 shrink-0 flex items-center gap-2 pl-0.5 overflow-visible">
         Today&apos;s Schedule
         {session && (
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Live Google Calendar Sync Active" />
@@ -212,20 +234,21 @@ export default function ScheduleList() {
         {timelineEvents.map((evt) => {
           const status = getEventStatus(evt);
           const isGapBlock = evt.title === 'Nothing planned';
+          const optionalClasses = getOptionalClassNames(evt, status);
 
           if (status === 'past') {
             return (
               <div
                 key={evt.id}
-                className={`border-l-2 border-stone-300 pl-2 md:pl-3 opacity-50 transition-all ${
-                  isGapBlock ? 'italic text-stone-400' : ''
-                }`}
+                className={`border-l-2 pl-2 md:pl-3 opacity-50 transition-all ${
+                  optionalClasses.border || 'border-stone-300'
+                } ${isGapBlock ? 'italic text-stone-400' : optionalClasses.background}`}
               >
-                <div className="text-[10px] md:text-xs font-medium text-stone-400 mb-0.5 line-through">
+                <div className={`text-[10px] md:text-xs font-medium mb-0.5 line-through ${optionalClasses.time || 'text-stone-400'}`}>
                   {formatScheduleRange(evt)}
                 </div>
-                <div className="text-xs md:text-sm font-medium text-stone-400 line-through">
-                  {evt.title}
+                <div className={`text-xs md:text-sm font-medium line-through ${optionalClasses.title || 'text-stone-400'}`}>
+                  {evt.title}{optionalClasses.badge}
                 </div>
               </div>
             );
@@ -236,16 +259,16 @@ export default function ScheduleList() {
               <div
                 key={evt.id}
                 ref={activeRef}
-                className={`border-l-2 border-emerald-400 pl-2 md:pl-3 relative py-1 transition-all ${
-                  isGapBlock ? 'bg-stone-100/40 rounded-r-xl' : ''
-                }`}
+                className={`border-l-2 pl-2 md:pl-3 relative py-1 transition-all ${
+                  optionalClasses.border || 'border-emerald-400'
+                } ${isGapBlock ? 'bg-stone-100/40 rounded-r-xl' : optionalClasses.background}`}
               >
                 <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] animate-pulse-glow" />
-                <div className="text-[10px] md:text-xs font-bold text-emerald-600 mb-0.5">
+                <div className={`text-[10px] md:text-xs font-bold mb-0.5 ${optionalClasses.time || 'text-emerald-600'}`}>
                   {formatScheduleRange(evt)}
                 </div>
-                <div className="text-xs md:text-sm font-semibold text-stone-900">
-                  Current: {evt.title}
+                <div className={`text-xs md:text-sm font-semibold ${optionalClasses.title || 'text-stone-900'}`}>
+                  Current: {evt.title}{optionalClasses.badge}
                 </div>
               </div>
             );
@@ -254,15 +277,15 @@ export default function ScheduleList() {
           return (
             <div
               key={evt.id}
-              className={`border-l-2 border-stone-300 pl-2 md:pl-3 transition-all ${
-                isGapBlock ? 'text-stone-400 italic' : ''
-              }`}
+              className={`border-l-2 pl-2 md:pl-3 transition-all ${
+                optionalClasses.border || 'border-stone-300'
+              } ${isGapBlock ? 'text-stone-400 italic' : optionalClasses.background}`}
             >
-              <div className="text-[10px] md:text-xs font-medium text-stone-400 mb-0.5">
+              <div className={`text-[10px] md:text-xs font-medium mb-0.5 ${optionalClasses.time || 'text-stone-400'}`}>
                 {formatScheduleRange(evt)}
               </div>
-              <div className="text-xs md:text-sm font-medium text-stone-700">
-                {evt.title}
+              <div className={`text-xs md:text-sm font-medium ${optionalClasses.title || 'text-stone-700'}`}>
+                {evt.title}{optionalClasses.badge}
               </div>
             </div>
           );

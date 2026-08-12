@@ -11,6 +11,7 @@ export interface ScheduleEvent {
   end: string;   // HH:MM
   title: string;
   location?: string;
+  isOptional?: boolean;
 }
 
 export type EventStatus = 'past' | 'current' | 'future';

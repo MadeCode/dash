@@ -5,6 +5,15 @@ import { authOptions } from '@/lib/authOptions';
 const GOOGLE_CALENDAR_API = 'https://www.googleapis.com/calendar/v3';
 const BRUSSELS_TIME_ZONE = 'Europe/Brussels';
 
+type GoogleCalendarEvent = {
+  id: string;
+  summary?: string;
+  start?: { dateTime?: string; date?: string };
+  end?: { dateTime?: string; date?: string };
+  attendees?: { self?: boolean; optional?: boolean; responseStatus?: string }[];
+  transparency?: string;
+};
+
 function getBrusselsDateParts(date: Date) {
   const parts = new Intl.DateTimeFormat('en-CA', {
     day: '2-digit',
@@ -85,15 +94,19 @@ export async function GET() {
     const data = await res.json();
     const items = data.items || [];
 
-    const events = items.map((evt: { id: string; summary?: string; start?: { dateTime?: string; date?: string }; end?: { dateTime?: string; date?: string } }) => {
+    const events = items.map((evt: GoogleCalendarEvent) => {
       const startDateTime = evt.start?.dateTime ? new Date(evt.start.dateTime) : null;
       const endDateTime = evt.end?.dateTime ? new Date(evt.end.dateTime) : null;
+
+      const selfAttendee = evt.attendees?.find((attendee) => attendee.self);
+      const isOptional = selfAttendee?.optional === true || selfAttendee?.responseStatus === 'tentative' || evt.transparency === 'transparent';
 
       return {
         id: evt.id,
         title: evt.summary || 'Untitled Event',
         start: formatInBrussels(startDateTime),
         end: formatInBrussels(endDateTime),
+        isOptional,
       };
     });
 

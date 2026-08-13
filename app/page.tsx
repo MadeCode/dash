@@ -7,7 +7,6 @@ import Link from 'next/link';
 import TaskList from '@/components/TaskList';
 import HeaderClockWeather from '@/components/HeaderClockWeather';
 import ScheduleList from '@/components/ScheduleList';
-import FullscreenButton from '@/components/FullscreenButton';
 import SettingsModal from '@/components/SettingsModal';
 
 export default function Home() {
@@ -100,9 +99,8 @@ export default function Home() {
   // Authenticated Dashboard View (Clean & Distraction Free)
   return (
     <main className="flex w-full h-full p-6 md:p-8 gap-6 md:gap-8 max-w-5xl mx-auto relative select-none">
-      {/* Settings & Fullscreen Controls */}
+      {/* Settings Controls */}
       <SettingsModal />
-      <FullscreenButton />
 
       {/* Left Column: Tasks (55%) */}
       <TaskList />

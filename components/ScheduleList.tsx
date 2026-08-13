@@ -34,7 +34,7 @@ function getOptionalClassNames(event: ScheduleEvent, status: EventStatus) {
       border: 'border-sky-400',
       time: 'text-sky-600',
       title: 'text-sky-950',
-      background: 'bg-sky-50/70 rounded-r-xl',
+      background: 'bg-sky-50/70 rounded-r-[3px]',
       badge: <span className="ml-2 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-sky-700">Optional</span>,
     };
   }
@@ -43,7 +43,7 @@ function getOptionalClassNames(event: ScheduleEvent, status: EventStatus) {
     border: 'border-sky-300',
     time: 'text-sky-500',
     title: 'text-sky-700',
-    background: 'bg-sky-50/40 rounded-r-xl',
+    background: 'bg-sky-50/40 rounded-r-[3px]',
     badge: <span className="ml-2 rounded-full bg-sky-100 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-sky-700">Optional</span>,
   };
 }
@@ -219,7 +219,7 @@ export default function ScheduleList() {
 
   return (
     <div
-      className={`flex-1 flex flex-col overflow-hidden rounded-3xl transition-colors ${
+      className={`flex-1 flex flex-col overflow-hidden rounded-[3px] transition-colors ${
         isMeetingAlertPulsing ? 'animate-meeting-alert-pulse' : ''
       }`}
     >
@@ -261,7 +261,7 @@ export default function ScheduleList() {
                 ref={activeRef}
                 className={`border-l-2 pl-2 md:pl-3 relative py-1 transition-all ${
                   optionalClasses.border || 'border-emerald-400'
-                } ${isGapBlock ? 'bg-stone-100/40 rounded-r-xl' : optionalClasses.background}`}
+                } ${isGapBlock ? 'bg-stone-100/40 rounded-r-[3px]' : optionalClasses.background}`}
               >
                 <div className="absolute -left-[5px] top-2.5 w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_6px_rgba(52,211,153,0.6)] animate-pulse-glow" />
                 <div className={`text-[10px] md:text-xs font-bold mb-0.5 ${optionalClasses.time || 'text-emerald-600'}`}>

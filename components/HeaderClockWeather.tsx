@@ -6,7 +6,7 @@ import { fetchLiveWeather, WeatherData, HourlyForecast } from '@/lib/weather';
 
 const BRUSSELS_TIME_ZONE = 'Europe/Brussels';
 const GHENT_COORDINATES = { lat: 51.0543, lon: 3.7174, city: 'Ghent' };
-const CHART_WIDTH = 920;
+const CHART_WIDTH = 875;
 const CHART_HEIGHT = 260;
 const CHART_PADDING = { top: 34, right: 50, bottom: 46, left: 46 };
 
@@ -80,7 +80,7 @@ function HourlyWeatherChart({ hourly }: { hourly: HourlyForecast[] }) {
 
   return (
     <div className="mt-4 overflow-x-auto thin-scrollbar pb-2">
-      <div className="relative min-w-[920px]" style={{ width: CHART_WIDTH }}>
+      <div className="relative min-w-[875px]" style={{ width: CHART_WIDTH }}>
         <svg width={CHART_WIDTH} height={CHART_HEIGHT} className="block rounded-2xl bg-white/70 border border-stone-200/70">
           {[0, 0.25, 0.5, 0.75, 1].map((fraction) => {
             const y = CHART_PADDING.top + fraction * plotHeight;
@@ -181,7 +181,7 @@ export default function HeaderClockWeather() {
 
       {showHourlyModal && (
         <div className="fixed inset-0 bg-stone-900/30 backdrop-blur-sm z-[100] flex items-center justify-center p-3 md:p-4">
-          <div className="bg-stone-50 border border-stone-200 rounded-3xl shadow-2xl w-full max-w-4xl p-5 md:p-6 relative animate-in fade-in zoom-in-95 duration-200 max-h-[85vh] flex flex-col">
+          <div className="bg-stone-50 border border-stone-200 rounded-3xl shadow-2xl w-full max-w-5xl p-4 md:p-5 relative animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
             <button onClick={() => setShowHourlyModal(false)} className="absolute top-4 right-4 text-stone-400 hover:text-stone-600 p-1.5 rounded-xl hover:bg-stone-200/50 transition-colors" aria-label="Close hourly forecast"><X className="w-5 h-5" /></button>
 
             <div className="flex items-center gap-2.5 mb-1 pr-10">

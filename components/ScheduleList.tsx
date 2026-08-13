@@ -223,7 +223,7 @@ export default function ScheduleList() {
         isMeetingAlertPulsing ? 'animate-meeting-alert-pulse' : ''
       }`}
     >
-      <h2 className="text-[10px] md:text-xs font-semibold uppercase tracking-widest text-stone-400 mb-2 md:mb-3 shrink-0 flex items-center gap-2 pl-0.5 overflow-visible">
+      <h2 className="text-[10px] md:text-xs font-semibold uppercase tracking-widest text-stone-400 mb-2 md:mb-3 shrink-0 flex items-center gap-2 pl-1 overflow-visible">
         Today&apos;s Schedule
         {session && (
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" title="Live Google Calendar Sync Active" />
